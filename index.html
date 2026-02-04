@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate Checker</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+
+/* โค้ดส่วนอื่น ๆ (Header, Container, Search) ไม่มีการเปลี่ยนแปลง */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin:0; padding:20px;
+    background-color:#F1F8E9;
+}
+.container { 
+    max-width:420px !important;
+    margin: 20px auto;
+    background-color:#fff;
+    padding:30px 30px; 
+    border-radius:28px;
+    border:1px solid #dcdcdc;
+    box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+.header-section { 
+    text-align:center;
+    margin-bottom:10px;
+}
+.mascot-img {
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    border:4px solid #4CAF50;
+    object-fit:cover;
+}
+.header {
+    color:#2E7D32;
+    font-size:34px;
+    font-weight:800;
+    border-bottom:3px solid #4CAF50;
+    padding-bottom:8px;
+    margin-top:5px;
+    margin-bottom:25px;
+}
+.search-area {
+    margin-top:20px;
+    margin-bottom:20px;
+}
+.search-bar {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+.search-input {
+    padding:12px 15px;
+    border:1px solid #ccc;
+    border-radius:12px;
+    font-size:16px;
+}
+.search-button {
+    background-color:#4CAF50;
+    color:white;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+.alert-message { 
+    background-color:#FFE0B2;
+    color:#E65100;
+    padding:12px;
+    border-radius:10px;
+    font-weight:bold;
+    text-align:center;
+    display:none;
+    margin-top:10px;
+}
+/* ─────────────────────────────
+    ตารางใหม่ + เส้นครบทุกด้าน
+────────────────────────────── */
+.data-table {
+    width:100% !important; 
+    border-collapse:collapse;
+    margin-top:10px;
+    border:1px solid #9e9e9e; 
+    /* โหมด Auto Layout (ขนาดตามเนื้อหา) */
+}
+
+.data-table th,
+.data-table td {
+    border:1px solid #9e9e9e !important; 
+    padding:8px 10px;
+    vertical-align: top;
+}
+
+.data-table th {
+    background-color:#e0e0e0;
+    font-weight:bold;
+    color:#333;
+    text-align: center; 
+}
+
+.data-table tr:nth-child(even) { background:#FFF7E6; }
+.data-table tr:nth-child(odd) { background:#ffffff; }
+.data-table tr:hover { background:#DCEDC8; }
+
+/* -------------------------------------------------------------------------- */
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header-section">
+        <img src="unnamed.jpg" class="mascot-img">
+        <div class="header">Certificate Checker</div>
+    </div>
+
+    <div class="search-area">
+        <div class="search-bar">
+            <input id="searchInput" class="search-input" placeholder="กรอกชื่อ-นามสกุล เช่น ใจรัก มีสุข">
+            <button id="searchButton" class="search-button">ค้นหา</button>
+        </div>
+        <div id="alertMessage" class="alert-message">โปรดกรอกข้อความที่ต้องการค้นหา</div>
+    </div>
+
+    <div id="nameResult" class="alert-message" 
+        style="display:none; background:#E8F5E9; color:#2E7D32;">
+    </div>
+
+    <div id="certificateTableContainer" style="display:none;">
+        <table class="data-table">
+            <thead id="certificateTableHead"></thead>
+            <tbody id="certificateTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="noResult" class="alert-message" 
+        style="display:none; background-color:#FFF8D1; color:#8A6D3B;">
+        ไม่พบข้อมูลใบรับรองสำหรับคำค้นหานี้
+    </div>
+    
+    <div id="loadingMessage" class="alert-message" 
+        style="display:none; background-color:#E0F7FA; color:#006064;">
+        <i class="fas fa-spinner fa-spin"></i> ระบบกำลังค้นหา รอสักครู่นะครับ...
+    </div>
+
+</div>
+
+<script>
+// ⭐⭐ เปลี่ยน URL นี้เป็น URL Web App ของคุณ ⭐⭐
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyjwSLggdHGYMUQ10AFCfKrFFl1VIT23RWgo3MNPAHeurzlFLi5jTmr2NBjJNoO-kk/exec"; 
+
+// ลบคอลัมน์ 'status' ออกไปแล้ว
+const COLUMNS_TO_HIDE = ['no','name','company','no.', 'status']; 
+
+// กำหนดลำดับการแสดงผลของคอลัมน์
+const DISPLAY_ORDER = ['LICENSEID', 'DURATION', 'COURSE', 'ISSUEDATE', 'EXPIRYDATE'];
+
+
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+const alertMessage = document.getElementById('alertMessage');
+const nameResult = document.getElementById('nameResult');
+const tableContainer = document.getElementById('certificateTableContainer');
+const tableHead = document.getElementById('certificateTableHead');
+const tableBody = document.getElementById('certificateTableBody');
+const noResult = document.getElementById('noResult');
+const loadingMessage = document.getElementById('loadingMessage'); 
+
+
+function hideAllResults(){
+    alertMessage.style.display='none';
+    nameResult.style.display='none';
+    tableContainer.style.display='none';
+    noResult.style.display='none';
+    loadingMessage.style.display='none';
+}
+
+async function runSearch(){
+    hideAllResults();
+    let query = searchInput.value.trim(); 
+
+    if(!query){ 
+        alertMessage.style.display='block';
+        return;
+    }
+    
+    // ⭐⭐ แก้ไข: ลบช่องว่างทั้งหมดเพื่อให้ค้นหาได้ยืดหยุ่น ⭐⭐
+    query = query.replace(/\s/g, ''); 
+    
+    // ⭐⭐ แสดง Loading State ก่อนเริ่มการค้นหา ⭐⭐
+    loadingMessage.style.display='block';
+
+
+    try{
+        const res = await fetch(`${GAS_WEB_APP_URL}?name=${encodeURIComponent(query)}`);
+        
+        // ⭐⭐ ซ่อน Loading State ทันทีที่รับ Response ได้แล้ว ⭐⭐
+        loadingMessage.style.display='none'; 
+        
+        const results = await res.json();
+        
+        if(results.length === 0){
+            noResult.style.display='block';
+            return;
+        }
+
+        const first = results[0];
+        nameResult.innerHTML = `Name: <strong>${first.NAME || 'ไม่ระบุ'}</strong> | Company: <strong>${first.COMPANY || 'ไม่ระบุ'}</strong>`;
+        nameResult.style.display='block';
+
+        tableHead.innerHTML='';
+        tableBody.innerHTML='';
+
+        const headers = Object.keys(first);
+        
+        // กรองและเรียงลำดับหัวตารางตาม DISPLAY_ORDER ที่กำหนดไว้
+        const headersToShow = DISPLAY_ORDER.filter(h => 
+            !COLUMNS_TO_HIDE.includes(h.toLowerCase()) && headers.includes(h)
+        );
+
+
+        // สร้าง TH ตามลำดับที่กำหนดไว้
+        headersToShow.forEach(h=>{
+            const th = document.createElement('th');
+            th.textContent = h;
+            tableHead.appendChild(th);
+        });
+
+        results.forEach(row=>{
+            const tr = document.createElement('tr');
+            
+            // สร้าง TD ตามลำดับที่กำหนดไว้
+            headersToShow.forEach(h=>{
+                const td = document.createElement('td');
+                const headerKey = h.toLowerCase();
+                td.textContent = row[h] || '';
+                
+                // ⭐⭐ การแก้ไขตรรกะสี: ตรวจสอบสตริงยาว (สีแดง) ก่อนสตริงสั้น (สีเขียว) ⭐⭐
+                if (h === 'LICENSEID') {
+                    const licenseDetails = row[h] || '';
+                    
+                    // 1. เงื่อนไขสำหรับสีแดง (ตรวจสอบก่อน)
+                    if (licenseDetails.includes("ไม่สามารถทำงานในที่อับอากาศได้")) {
+                        td.style.color = 'red'; 
+                        td.style.fontWeight = 'bold';
+                    } 
+                    // 2. เงื่อนไขสำหรับสีเขียว
+                    else if (licenseDetails.includes("สามารถทำงานในที่อับอากาศได้")) {
+                        td.style.color = 'green';
+                        td.style.fontWeight = 'bold';
+                    }
+                    // ข้อความอื่น ๆ จะปล่อยให้เป็นสีดำปกติ
+                }
+                
+                // จัดกึ่งกลางสำหรับทุกคอลัมน์ ยกเว้น COURSE
+                if (h !== 'COURSE') {
+                    td.style.textAlign = 'center';
+                } else {
+                    td.style.textAlign = 'left';
+                }
+                
+                tr.appendChild(td);
+            });
+            tableBody.appendChild(tr);
+        });
+
+        tableContainer.style.display='block';
+
+    } catch (err){
+        // ⭐⭐ ซ่อน Loading State เมื่อเกิดข้อผิดพลาด ⭐⭐
+        loadingMessage.style.display='none'; 
+        alertMessage.textContent='เกิดข้อผิดพลาดในการดึงข้อมูล';
+        alertMessage.style.display='block';
+    }
+}
+
+searchButton.addEventListener('click', runSearch);
+searchInput.addEventListener('keypress', e=>{
+    if(e.key === 'Enter') runSearch();
+});
+</script>
+</body>
+</html>
