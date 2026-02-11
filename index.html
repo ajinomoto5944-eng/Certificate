@@ -8,8 +8,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
-
-/* โค้ดส่วนอื่น ๆ (Header, Container, Search) ไม่มีการเปลี่ยนแปลง */
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin:0; padding:20px;
@@ -79,52 +77,41 @@ body {
     display:none;
     margin-top:10px;
 }
-/* ─────────────────────────────
-    ตารางใหม่ + เส้นครบทุกด้าน
-────────────────────────────── */
 .data-table {
     width:100% !important; 
     border-collapse:collapse;
     margin-top:10px;
     border:1px solid #9e9e9e; 
-    /* โหมด Auto Layout (ขนาดตามเนื้อหา) */
 }
-
 .data-table th,
 .data-table td {
     border:1px solid #9e9e9e !important; 
     padding:8px 10px;
     vertical-align: top;
 }
-
 .data-table th {
     background-color:#e0e0e0;
     font-weight:bold;
     color:#333;
     text-align: center; 
 }
-
 .data-table tr:nth-child(even) { background:#FFF7E6; }
 .data-table tr:nth-child(odd) { background:#ffffff; }
 .data-table tr:hover { background:#DCEDC8; }
-
-/* -------------------------------------------------------------------------- */
-
 </style>
 </head>
 
 <body>
 
 <div class="container">
-
     <div class="header-section">
-        <img src="S__5406722.jpg" class="mascot-img">
+      <img src="S__5406722.jpg" class="mascot-img">
         <div class="header">Certificate Checker</div>
     </div>
 
     <div class="search-area">
         <div class="search-bar">
-            <input id="searchInput" class="search-input" placeholder="กรอกชื่อ-นามสกุล เช่น ใจรัก มีสุข">
+            <input id="searchInput" class="search-input" placeholder="กรอกชื่อ-นามสกุล เช่น สมศักดิ์ สมใจ">
             <button id="searchButton" class="search-button">ค้นหา</button>
         </div>
         <div id="alertMessage" class="alert-message">โปรดกรอกข้อความที่ต้องการค้นหา</div>
@@ -150,19 +137,16 @@ body {
         style="display:none; background-color:#E0F7FA; color:#006064;">
         <i class="fas fa-spinner fa-spin"></i> ระบบกำลังค้นหา รอสักครู่นะครับ...
     </div>
-
 </div>
 
 <script>
-// ⭐⭐ เปลี่ยน URL นี้เป็น URL Web App ของคุณ ⭐⭐
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxA6SWdx9G3cgs5CCZkNTk2x1NgnuuAObzfulk3rBblxkCeUUc4ZxYK6xXpaHI3swAk/exec"; 
 
-// ลบคอลัมน์ 'status' ออกไปแล้ว
-const COLUMNS_TO_HIDE = ['no','name','company','no.', 'status']; 
+// นำ 'status' ออกเพื่อให้คอลัมน์แสดงผล
+const COLUMNS_TO_HIDE = ['no','name','company','no.']; 
 
-// กำหนดลำดับการแสดงผลของคอลัมน์
-const DISPLAY_ORDER = ['LICENSEID', 'DURATION', 'COURSE', 'ISSUEDATE', 'EXPIRYDATE'];
-
+// เพิ่ม 'STATUS' เข้าไปในลำดับการแสดงผล
+const DISPLAY_ORDER = ['LICENSEID', 'DURATION', 'COURSE', 'ISSUEDATE', 'EXPIRYDATE', 'STATUS'];
 
 const searchInput = document.getElementById('searchInput');
 const searchButton = document.getElementById('searchButton');
@@ -173,7 +157,6 @@ const tableHead = document.getElementById('certificateTableHead');
 const tableBody = document.getElementById('certificateTableBody');
 const noResult = document.getElementById('noResult');
 const loadingMessage = document.getElementById('loadingMessage'); 
-
 
 function hideAllResults(){
     alertMessage.style.display='none';
@@ -192,17 +175,11 @@ async function runSearch(){
         return;
     }
     
-    // ⭐⭐ แก้ไข: ลบช่องว่างทั้งหมดเพื่อให้ค้นหาได้ยืดหยุ่น ⭐⭐
     query = query.replace(/\s/g, ''); 
-    
-    // ⭐⭐ แสดง Loading State ก่อนเริ่มการค้นหา ⭐⭐
     loadingMessage.style.display='block';
-
 
     try{
         const res = await fetch(`${GAS_WEB_APP_URL}?name=${encodeURIComponent(query)}`);
-        
-        // ⭐⭐ ซ่อน Loading State ทันทีที่รับ Response ได้แล้ว ⭐⭐
         loadingMessage.style.display='none'; 
         
         const results = await res.json();
@@ -220,14 +197,10 @@ async function runSearch(){
         tableBody.innerHTML='';
 
         const headers = Object.keys(first);
-        
-        // กรองและเรียงลำดับหัวตารางตาม DISPLAY_ORDER ที่กำหนดไว้
         const headersToShow = DISPLAY_ORDER.filter(h => 
             !COLUMNS_TO_HIDE.includes(h.toLowerCase()) && headers.includes(h)
         );
 
-
-        // สร้าง TH ตามลำดับที่กำหนดไว้
         headersToShow.forEach(h=>{
             const th = document.createElement('th');
             th.textContent = h;
@@ -237,30 +210,33 @@ async function runSearch(){
         results.forEach(row=>{
             const tr = document.createElement('tr');
             
-            // สร้าง TD ตามลำดับที่กำหนดไว้
             headersToShow.forEach(h=>{
                 const td = document.createElement('td');
-                const headerKey = h.toLowerCase();
                 td.textContent = row[h] || '';
                 
-                // ⭐⭐ การแก้ไขตรรกะสี: ตรวจสอบสตริงยาว (สีแดง) ก่อนสตริงสั้น (สีเขียว) ⭐⭐
                 if (h === 'LICENSEID') {
                     const licenseDetails = row[h] || '';
-                    
-                    // 1. เงื่อนไขสำหรับสีแดง (ตรวจสอบก่อน)
                     if (licenseDetails.includes("ไม่สามารถทำงานในที่อับอากาศได้")) {
                         td.style.color = 'red'; 
                         td.style.fontWeight = 'bold';
-                    } 
-                    // 2. เงื่อนไขสำหรับสีเขียว
-                    else if (licenseDetails.includes("สามารถทำงานในที่อับอากาศได้")) {
+                    } else if (licenseDetails.includes("สามารถทำงานในที่อับอากาศได้")) {
                         td.style.color = 'green';
                         td.style.fontWeight = 'bold';
                     }
-                    // ข้อความอื่น ๆ จะปล่อยให้เป็นสีดำปกติ
+                }
+
+                // เพิ่มการจัดการสีสำหรับคอลัมน์ STATUS
+                if (h === 'STATUS') {
+                    const statusText = row[h] || '';
+                    if (statusText.includes("หมดอายุ")) {
+                        td.style.color = 'red';
+                        td.style.fontWeight = 'bold';
+                    } else if (statusText.includes("ปกติ")) {
+                        td.style.color = 'green';
+                        td.style.fontWeight = 'bold';
+                    }
                 }
                 
-                // จัดกึ่งกลางสำหรับทุกคอลัมน์ ยกเว้น COURSE
                 if (h !== 'COURSE') {
                     td.style.textAlign = 'center';
                 } else {
@@ -275,7 +251,6 @@ async function runSearch(){
         tableContainer.style.display='block';
 
     } catch (err){
-        // ⭐⭐ ซ่อน Loading State เมื่อเกิดข้อผิดพลาด ⭐⭐
         loadingMessage.style.display='none'; 
         alertMessage.textContent='เกิดข้อผิดพลาดในการดึงข้อมูล';
         alertMessage.style.display='block';
