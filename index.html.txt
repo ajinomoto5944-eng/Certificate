@@ -155,7 +155,7 @@ body {
 
 <script>
 // ⭐⭐ เปลี่ยน URL นี้เป็น URL Web App ของคุณ ⭐⭐
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxA6SWdx9G3cgs5CCZkNTk2x1NgnuuAObzfulk3rBblxkCeUUc4ZxYK6xXpaHI3swAk/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7rAGWx0klnuDd4EF6NV4Y8M_FDG2UNfW_qh8g1Kwc8mZhxOD5qCYYMx8LkO-wLYA6/exec"; 
 
 // ลบคอลัมน์ 'status' ออกไปแล้ว
 const COLUMNS_TO_HIDE = ['no','name','company','no.', 'status']; 
